@@ -1,0 +1,347 @@
+---
+title: "Star Wars Script Analysis"
+author: "Kuldeep Singh Chouhan"
+date: "7/31/2019"
+output: 
+  html_document:
+    number_section: no
+    toc: yes
+    theme: cosmo
+    highlight: tango
+    code_folding: hide
+---
+
+# **Introduction**
+
+It is estimated that over 70% of potentially useable business information is unstructured, often in the form of text data. Text mining provides a collection of techniques that allow us to derive actionable insights from these data. In this kernel we are going to perform text mining to perform analysis on the Star Wars scripts from The Original Trilogy Episodes (IV, V and VI). We will use different types of visualization techniques. We are going to use tm and tidytext packages for text mining and analysis.we will use wordcloud and ggplot2 for visualization.
+
+# **Loading Data & Packages**
+
+```{r message=FALSE}
+#load packages
+library(tidyverse)
+library(tidytext)
+library(wordcloud2)
+library(tm)
+library(topicmodels)
+library(ggthemes)
+
+#load datasets
+ep4 <- read.table("starwars data/SW_EpisodeIV.txt")
+ep5 <- read.table("starwars data/SW_EpisodeV.txt")
+ep6 <- read.table("starwars data/SW_EpisodeVI.txt")
+```
+
+# **Preprocessing**
+(1) cleanCorpus() - The first function performs cleaning and preprocessing steps to a corpus.
+
+(2) frequentTerms() - The second function constructs the term-document matrix, that describes the frequency of terms that occur in a collection of documents. This matrix has terms in the first column and documents (sentences) across the top as individual column names.
+
+(3) frequentBigrams() - It extracts token containing two words. we will use this function two make plots for bigrams.
+
+(4) all_clean() - This function constructs the term-document matrix, that describes the frequency of terms that occur in a collection of documents. This specific function is going to be used for constructing commonality cloud.
+
+```{r message=FALSE, warning=FALSE}
+# Text transformations
+cleanCorpus <- function(corpus){
+
+  corpus.tmp <- tm_map(corpus, removePunctuation)
+  corpus.tmp <- tm_map(corpus.tmp, removeNumbers)
+  corpus.tmp <- tm_map(corpus.tmp, stripWhitespace)
+  corpus.tmp <- tm_map(corpus.tmp, content_transformer(tolower))
+  v_stopwords <- c(stopwords("english"), c("thats","weve","hes","theres","ive","im",
+                                           "will","can","cant","dont","youve","us",
+                                           "youre","youll","theyre","whats","didnt"))
+  corpus.tmp <- tm_map(corpus.tmp, removeWords, v_stopwords)
+  return(corpus.tmp)
+
+}
+
+# Most frequent terms 
+frequentTerms <- function(text){
+
+  s.cor <- VCorpus(VectorSource(text))
+  s.cor.cl <- cleanCorpus(s.cor)
+  s.tdm <- TermDocumentMatrix(s.cor.cl)
+  s.tdm <- removeSparseTerms(s.tdm, 0.999)
+  m <- as.matrix(s.tdm)
+  word_freqs <- sort(rowSums(m), decreasing=TRUE)
+  dm <- data.frame(word=names(word_freqs), freq=word_freqs)
+  return(dm)
+
+}
+
+
+# Tokenizer for defining bigrams
+tokenizer  <- function(x){
+
+  NGramTokenizer(x, Weka_control(min=2, max=2))
+
+}
+
+
+# Most frequent bigrams 
+frequentBigrams <- function(text){
+
+  s.cor <- VCorpus(VectorSource(text))
+  s.cor.cl <- cleanCorpus(s.cor)
+  s.tdm <- TermDocumentMatrix(s.cor.cl, control=list(tokenize=tokenizer))
+  s.tdm <- removeSparseTerms(s.tdm, 0.999)
+  m <- as.matrix(s.tdm)
+  word_freqs <- sort(rowSums(m), decreasing=TRUE)
+  dm <- data.frame(word=names(word_freqs), freq=word_freqs)
+  return(dm)
+
+}
+
+```
+
+# **EDA**
+
+Now we will perform some exploratory data analysis and sentiment analysis on these datasets and then in the last we will combine these three datasets together to gain more meaningful insights from the data.
+
+## Episode IV: A New Hope
+There are two variables -
+
+  * character - Number of character in episode IV.
+  
+  * dialogue - dialogue given by particular character.
+    
+Lets have a glimpse of our dataset. 
+
+```{r}
+# getting glimpse of dataset.
+glimpse(ep4)
+```
+
+```{r}
+# Total number of dialogues.
+length(ep4$dialogue)
+```
+
+```{r}
+# Total number of characters.
+length(table(ep4$character))
+```
+
+We can see there are total 60 character in Episode IV - A New Hope and total of 1010 dialogues.
+We will now construct a frequency plot for showing top 15 character in Episode IV: A New Hope. As we can see Luke is the top character in Episode IV.
+
+```{r}
+top_char_ep4 <- ep4 %>%
+  count(character) %>%
+  mutate(character = fct_reorder(character,n)) %>%
+  top_n(15,n)
+
+ggplot(top_char_ep4, aes(character, n)) +
+  geom_col(fill = "sienna1") +
+  coord_flip()+
+  theme_gdocs()+
+  labs(x="Character", y="Number of dialogues",title="Star Wars Episode IV")+
+  geom_label(label=top_char_ep4$n, size=3)
+
+```
+
+Lets make a plot to see the most frequent terms in Episode IV- A New Hope. Instead of using wordcloud, I would like to use bar plot to analize the word frequency as they convey more clear and concise information.
+
+```{r message=FALSE}
+tidy_ep4 <- ep4 %>%
+  mutate(dialogue = as.character(dialogue)) %>%
+  unnest_tokens(word, dialogue) %>%
+  anti_join(stop_words)%>%
+  count(word, sort = TRUE) %>%
+  mutate(word = fct_reorder(word,n))%>%
+  top_n(15,n) 
+
+tidy_ep4%>%
+  ggplot(aes(word,n)) +
+  geom_col(fill = "sienna1") +
+  xlab(NULL) +
+  coord_flip() +
+  theme_gdocs() +
+  labs(x="Word Frequency", y="Words",title="Star Wars Episode IV") +
+  geom_label(label=tidy_ep4$n, size=3)
+
+```
+
+## Episode V-The Empire Strikes Back
+There are two variables -
+
+  * character - Number of character in episode IV.
+  
+  * dialogue - dialogue given by particular character.
+
+```{r}
+# getting glimpse of dataset
+glimpse(ep5)
+```
+
+```{r}
+# Total number of dialogue
+length(ep5$dialogue)
+```
+
+```{r}
+# Total number of characters.
+length(table(ep5$character))
+```
+
+There are 49 character in Episode V and 839 dialogues.
+
+```{r}
+top_char_ep5 <- ep5 %>%
+  count(character) %>%
+  mutate(character = fct_reorder(character,n)) %>%
+  top_n(15,n)
+
+ggplot(top_char_ep5, aes(character, n)) +
+  geom_col(fill = "sienna1") +
+  coord_flip()+
+  theme_bw()+
+  labs(x="Character", y="Number of dialogues",           title="Star Wars Episode V")+
+  geom_label(label=top_char_ep5$n, size=3)
+
+```
+
+```{r message=FALSE}
+tidy_ep5 <- ep5 %>%
+  mutate(dialogue = as.character(dialogue)) %>%
+  unnest_tokens(word, dialogue) %>%
+  anti_join(stop_words)%>%
+  count(word, sort = TRUE) %>%
+  mutate(word = fct_reorder(word,n))%>%
+  top_n(15,n) 
+
+tidy_ep5%>%
+  ggplot(aes(word,n)) +
+  geom_col(fill = "sienna1") +
+  xlab(NULL) +
+  coord_flip() +
+  theme_gdocs() +
+  labs(x="Word Frequency", y="Words",title="Star Wars Episode V") +
+  geom_label(label=tidy_ep5$n, size=3)
+
+```
+
+
+## Episode VI-Return of the Jedi
+There are two variables -
+
+  * character - Number of character in episode IV.
+  
+  * dialogue - dialogue given by particular character.
+  
+```{r}
+# Getting glimpse of dataset
+glimpse(ep6)
+```
+
+```{r}
+# Total number of dialogues.
+length(ep6$dialogue)
+```
+
+```{r}
+# Total number of characters.
+length(table(ep6$character))
+```
+
+There are 53 characters in Episode VI and total of 674 dialogue.
+
+```{r}
+top_char_ep6 <- ep6 %>%
+  count(character) %>%
+  mutate(character = fct_reorder(character,n)) %>%
+  top_n(15,n)
+
+ggplot(top_char_ep6, aes(character, n)) +
+  geom_col(fill = "sienna1") +
+  coord_flip()+
+  theme_bw()+
+  labs(x="Character", y="Number of dialogues",           title="Star Wars Episode VI")+
+  geom_label(label=top_char_ep6$n, size=3)
+
+```
+
+```{r message=FALSE}
+tidy_ep6 <- ep6 %>%
+  mutate(dialogue = as.character(dialogue)) %>%
+  unnest_tokens(word, dialogue) %>%
+  anti_join(stop_words)%>%
+  count(word, sort = TRUE) %>%
+  mutate(word = fct_reorder(word,n))%>%
+  top_n(15,n) 
+
+tidy_ep6%>%
+  ggplot(aes(word,n)) +
+  geom_col(fill = "sienna1") +
+  xlab(NULL) +
+  coord_flip() +
+  theme_gdocs() +
+  labs(x="Word Frequency", y="Words",title="Star Wars Episode IV") +
+  geom_label(label=tidy_ep6$n, size=3)
+
+```
+
+## Trilogy
+There are two variables -
+
+  1.character - Number of character in episode IV.
+  2.dialogue - dialogue given by particular character.
+  
+Now we will combine all the three datasets to perform some more analysis. We can see there are total 2,523 dialogue in Star Wars Trilogy and total 129 characters.
+
+```{r}
+# The Original Trilogy 
+trilogy <- rbind(ep4, ep5, ep6)
+```
+
+```{r}
+# Getting glimpse of dataset
+glimpse(trilogy)
+```
+
+```{r}
+# Total number of dialogues.
+length(trilogy$dialogue)
+```
+
+```{r}
+# Number of character in trilogy
+length(table(trilogy$character))
+```
+
+# **Sentiment Analysis**
+
+```{r}
+top.char.triology <- trilogy %>%
+  mutate(dialogue = as.character(trilogy$dialogue)) %>%
+  filter(character %in% c("LUKE","HAN","THREEPIO","LEIA","VADER",
+                          "BEN","LANDO","YODA","EMPEROR","RED LEADER")) %>%
+  unnest_tokens(word, dialogue)
+```
+
+
+# **References**
+*Courses*
+
+Datacamp. Text Mining: Bag of Words. URL: https://www.datacamp.com/courses/intro-to-text-mining-bag-of-words
+
+Datacamp. Sentiment Analysis in R: The Tidy Way. URL: https://www.datacamp.com/courses/sentiment-analysis-in-r-the-tidy-way
+
+Text Mining with R. URL: https://www.tidytextmining.com/sentiment.html#wordclouds
+
+*Packages*
+
+Hadley Wickham (2017). tidyverse:  tidyverse  packages for data manipulation, exploration and visualization that share a common design philosophy. R package version 1.2.1. URL: https://CRAN.R-project.org/package=tidyverse
+
+Ingo Feinerer and Kurt Hornik (2017). tm: Text Mining Package. R package version 0.7-3. URL: https://CRAN.R-project.org/package=tm
+
+Ian Fellows (2014). wordcloud: Word Clouds. R package version 2.5. URL: https://CRAN.R-project.org/package=wordcloud
+
+Dawei Lang and Guan-tin Chien (2018). wordcloud2: Create Word Cloud by 'htmlwidget'. R package version 0.2.1. URL: https://CRAN.R-project.org/package=wordcloud2
+
+Hadley Wickham (2017). reshape2: Flexibly Reshape Data: A Reboot of the Reshape Package. R package version 1.4.3. URL: https://CRAN.R-project.org/package=reshape2
+
+Doug Ashton and Shane Porter (2016). radarchart: Radar Chart from 'Chart.js'. R package version 0.3.1. URL: https://CRAN.R-project.org/package=radarchart
+
