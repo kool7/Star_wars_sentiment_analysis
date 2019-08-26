@@ -142,23 +142,16 @@ ggplot(top_char_ep4, aes(character, n)) +
 
 Lets make a plot to see the most frequent terms in Episode IV- A New Hope. Instead of using wordcloud, I would like to use bar plot to analize the word frequency as they convey more clear and concise information.
 
-```{r message=FALSE}
-tidy_ep4 <- ep4 %>%
-  mutate(dialogue = as.character(dialogue)) %>%
-  unnest_tokens(word, dialogue) %>%
-  anti_join(stop_words)%>%
-  count(word, sort = TRUE) %>%
-  mutate(word = fct_reorder(word,n))%>%
-  top_n(15,n) 
-
-tidy_ep4%>%
-  ggplot(aes(word,n)) +
-  geom_col(fill = "sienna1") +
-  xlab(NULL) +
+```{r}
+frequentTerms(ep4$dialogue) %>%
+  mutate(word = as.character(word)) %>%
+  slice(1:15) %>%
+  ggplot(aes(fct_reorder(word,freq), freq)) +
+  geom_col(fill = "burlywood", color = "black") +
+  geom_label(aes(label = freq)) +
   coord_flip() +
   theme_gdocs() +
-  labs(x="Word Frequency", y="Words",title="Star Wars Episode IV") +
-  geom_label(label=tidy_ep4$n, size=3)
+  labs(x="Word Frequency", y="Words",title="Star Wars Episode IV")
 
 ```
 
@@ -202,22 +195,15 @@ ggplot(top_char_ep5, aes(character, n)) +
 ```
 
 ```{r message=FALSE}
-tidy_ep5 <- ep5 %>%
-  mutate(dialogue = as.character(dialogue)) %>%
-  unnest_tokens(word, dialogue) %>%
-  anti_join(stop_words)%>%
-  count(word, sort = TRUE) %>%
-  mutate(word = fct_reorder(word,n))%>%
-  top_n(15,n) 
-
-tidy_ep5%>%
-  ggplot(aes(word,n)) +
-  geom_col(fill = "sienna1") +
-  xlab(NULL) +
+frequentTerms(ep5$dialogue) %>%
+  mutate(word = as.character(word)) %>%
+  slice(1:15) %>%
+  ggplot(aes(fct_reorder(word,freq), freq)) +
+  geom_col(fill = "burlywood", color = "black") +
+  geom_label(aes(label = freq)) +
   coord_flip() +
   theme_gdocs() +
-  labs(x="Word Frequency", y="Words",title="Star Wars Episode V") +
-  geom_label(label=tidy_ep5$n, size=3)
+  labs(x="Word Frequency", y="Words",title="Star Wars Episode V")
 
 ```
 
@@ -262,22 +248,15 @@ ggplot(top_char_ep6, aes(character, n)) +
 ```
 
 ```{r message=FALSE}
-tidy_ep6 <- ep6 %>%
-  mutate(dialogue = as.character(dialogue)) %>%
-  unnest_tokens(word, dialogue) %>%
-  anti_join(stop_words)%>%
-  count(word, sort = TRUE) %>%
-  mutate(word = fct_reorder(word,n))%>%
-  top_n(15,n) 
-
-tidy_ep6%>%
-  ggplot(aes(word,n)) +
-  geom_col(fill = "sienna1", color = "black") +
-  xlab(NULL) +
+frequentTerms(ep6$dialogue) %>%
+  mutate(word = as.character(word)) %>%
+  slice(1:15) %>%
+  ggplot(aes(fct_reorder(word,freq), freq)) +
+  geom_col(fill = "burlywood", color = "black") +
+  geom_label(aes(label = freq)) +
   coord_flip() +
   theme_gdocs() +
-  labs(x="Word Frequency", y="Words",title="Star Wars Episode IV") +
-  geom_label(label=tidy_ep6$n, size=3)
+  labs(x="Word Frequency", y="Words",title="Star Wars Episode VI")
 
 ```
 
@@ -312,9 +291,9 @@ length(trilogy$dialogue)
 length(table(trilogy$character))
 ```
 
-We can see there are total 2,523 dialogue in Star Wars Trilogy and total 129 characters.
+We can see there are total 2,523 dialogue in Star Wars Trilogy and total 129 characters. We should now visualize the top character in whole trilogy.
 
-```{r warning=FALSE, message=FALSE}
+```{r}
 
 top_char_trilogy <- trilogy %>%
   count(character) %>%
@@ -330,6 +309,19 @@ ggplot(top_char_trilogy, aes(character, n)) +
 
 ```
 
+Hmm, it seems like Luke is at the top of mountain. :)
+
+```{r}
+frequentTerms(trilogy$dialogue) %>%
+  mutate(word = as.character(word)) %>%
+  slice(1:15) %>%
+  ggplot(aes(fct_reorder(word,freq), freq)) +
+  geom_col(fill = "burlywood", color = "black") +
+  geom_label(aes(label = freq)) +
+  coord_flip() +
+  theme_gdocs() +
+  labs(x="Word Frequency", y="Words",title="Star Wars Original Trilogy")
+```
 
 # **Sentiment Analysis**
 
