@@ -39,8 +39,6 @@ ep6 <- read.table("starwars data/SW_EpisodeVI.txt")
 
 (3) frequentBigrams() - It extracts token containing two words. we will use this function two make plots for bigrams.
 
-(4) all_clean() - This function constructs the term-document matrix, that describes the frequency of terms that occur in a collection of documents. This specific function is going to be used for constructing commonality cloud.
-
 ```{r message=FALSE, warning=FALSE}
 # Text transformations
 cleanCorpus <- function(corpus){
@@ -134,7 +132,7 @@ top_char_ep4 <- ep4 %>%
   top_n(15,n)
 
 ggplot(top_char_ep4, aes(character, n)) +
-  geom_col(fill = "sienna1") +
+  geom_col(fill = "yellowgreen", color = "black") +
   coord_flip()+
   theme_gdocs()+
   labs(x="Character", y="Number of dialogues",title="Star Wars Episode IV")+
@@ -195,10 +193,10 @@ top_char_ep5 <- ep5 %>%
   top_n(15,n)
 
 ggplot(top_char_ep5, aes(character, n)) +
-  geom_col(fill = "sienna1") +
+  geom_col(fill = "yellowgreen", color = "black") +
   coord_flip()+
-  theme_bw()+
-  labs(x="Character", y="Number of dialogues",           title="Star Wars Episode V")+
+  theme_gdocs()+
+  labs(x="Character", y="Number of dialogues",  title="Star Wars Episode V")+
   geom_label(label=top_char_ep5$n, size=3)
 
 ```
@@ -255,9 +253,9 @@ top_char_ep6 <- ep6 %>%
   top_n(15,n)
 
 ggplot(top_char_ep6, aes(character, n)) +
-  geom_col(fill = "sienna1") +
+  geom_col(fill = "yellowgreen", color = "black") +
   coord_flip()+
-  theme_bw()+
+  theme_gdocs()+
   labs(x="Character", y="Number of dialogues",           title="Star Wars Episode VI")+
   geom_label(label=top_char_ep6$n, size=3)
 
@@ -274,7 +272,7 @@ tidy_ep6 <- ep6 %>%
 
 tidy_ep6%>%
   ggplot(aes(word,n)) +
-  geom_col(fill = "sienna1") +
+  geom_col(fill = "sienna1", color = "black") +
   xlab(NULL) +
   coord_flip() +
   theme_gdocs() +
@@ -284,22 +282,25 @@ tidy_ep6%>%
 ```
 
 ## Trilogy
-There are two variables -
+
+Now we will combine all the three datasets to perform some more analysis. There are two variables -
 
   1.character - Number of character in episode IV.
   2.dialogue - dialogue given by particular character.
-  
-Now we will combine all the three datasets to perform some more analysis. We can see there are total 2,523 dialogue in Star Wars Trilogy and total 129 characters.
 
 ```{r}
 # The Original Trilogy 
 trilogy <- rbind(ep4, ep5, ep6)
 ```
 
+Let's have a glimpse of our data.
+
 ```{r}
 # Getting glimpse of dataset
 glimpse(trilogy)
 ```
+
+Now we are going to check the total number of dialogue and characters in combined dataset.
 
 ```{r}
 # Total number of dialogues.
@@ -310,6 +311,25 @@ length(trilogy$dialogue)
 # Number of character in trilogy
 length(table(trilogy$character))
 ```
+
+We can see there are total 2,523 dialogue in Star Wars Trilogy and total 129 characters.
+
+```{r warning=FALSE, message=FALSE}
+
+top_char_trilogy <- trilogy %>%
+  count(character) %>%
+  mutate(character = fct_reorder(character,n)) %>%
+  top_n(15,n)
+
+ggplot(top_char_trilogy, aes(character, n)) +
+  geom_col(fill = "yellowgreen", color = "black") +
+  coord_flip()+
+  theme_gdocs()+
+  labs(x="Character", y="Number of dialogues", title="Star Wars Original Trilogy")+
+  geom_label(label=top_char_trilogy$n, size=3)
+
+```
+
 
 # **Sentiment Analysis**
 
