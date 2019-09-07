@@ -27,9 +27,9 @@ library(topicmodels)
 library(ggthemes)
 
 #load datasets
-ep4 <- read.table("starwars data/SW_EpisodeIV.txt")
-ep5 <- read.table("starwars data/SW_EpisodeV.txt")
-ep6 <- read.table("starwars data/SW_EpisodeVI.txt")
+ep4 <- read.table("data/SW_EpisodeIV.txt")
+ep5 <- read.table("data/SW_EpisodeV.txt")
+ep6 <- read.table("data/SW_EpisodeVI.txt")
 ```
 
 # **Preprocessing**
