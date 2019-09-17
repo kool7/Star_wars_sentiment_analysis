@@ -25,6 +25,7 @@ library(wordcloud2)
 library(tm)
 library(topicmodels)
 library(ggthemes)
+library(RWeka)
 
 #load datasets
 ep4 <- read.table("data/SW_EpisodeIV.txt")
@@ -155,6 +156,20 @@ frequentTerms(ep4$dialogue) %>%
 
 ```
 
+Now we will focus on tokens containing two words. This can help extract useful phrases which lead to some additional insights. Bigram tokenization grabs all two word combinations.
+
+```{r}
+frequentBigrams(ep4$dialogue) %>%
+  mutate(word = as.character(word)) %>%
+  slice(1:15) %>%
+  ggplot(aes(fct_reorder(word,freq), freq)) +
+  geom_col(fill = "burlywood", color = "black") +
+  geom_label(aes(label = freq)) +
+  coord_flip() +
+  theme_gdocs() +
+  labs(x="Word Frequency", y="Words",title="Star Wars Episode IV")
+```
+
 ## Episode V-The Empire Strikes Back
 There are two variables -
 
@@ -207,6 +222,18 @@ frequentTerms(ep5$dialogue) %>%
 
 ```
 
+```{r}
+frequentBigrams(ep5$dialogue) %>%
+  mutate(word = as.character(word)) %>%
+  slice(1:15) %>%
+  ggplot(aes(fct_reorder(word,freq), freq)) +
+  geom_col(fill = "burlywood", color = "black") +
+  geom_label(aes(label = freq)) +
+  coord_flip() +
+  theme_gdocs() +
+  labs(x="Word Frequency", y="Words",title="Star Wars Episode V")
+
+```
 
 ## Episode VI-Return of the Jedi
 There are two variables -
@@ -325,14 +352,34 @@ frequentTerms(trilogy$dialogue) %>%
 
 # **Sentiment Analysis**
 
-```{r}
-top.char.triology <- trilogy %>%
+Let’s address the topic of opinion mining or sentiment analysis. When human readers approach a text, we use our understanding of the emotional intent of words to infer whether a section of text is positive or negative, or perhaps characterized by some other more nuanced emotion like surprise or disgust. We will use all the three datasets to perfrom sentiment analysis.
+
+  * tokens - tokens consist of word-per-row.
+  
+  * sentiment - consists of bing sentiments.
+
+```{r message=FALSE}
+tokens <- trilogy %>%
   mutate(dialogue = as.character(trilogy$dialogue)) %>%
-  filter(character %in% c("LUKE","HAN","THREEPIO","LEIA","VADER",
-                          "BEN","LANDO","YODA","EMPEROR","RED LEADER")) %>%
-  unnest_tokens(word, dialogue)
+  unnest_tokens(word, dialogue) 
+
+sentiment <- tokens %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  group_by(sentiment) %>%
+  top_n(10, n) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, n)) 
 ```
 
+```{r}
+ggplot(sentiment, aes(word, n , fill = sentiment)) +
+  geom_col(show.legend = FALSE) + 
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(y="Frequency", x="Terms") +
+  coord_flip() +
+  theme_gdocs()
+```
 
 # **References**
 *Courses*
