@@ -26,6 +26,7 @@ library(tm)
 library(topicmodels)
 library(ggthemes)
 library(RWeka)
+library(gridExtra)
 
 #load datasets
 ep4 <- read.table("data/SW_EpisodeIV.txt")
@@ -144,7 +145,8 @@ ggplot(top_char_ep4, aes(character, n)) +
 Lets make a plot to see the most frequent terms in Episode IV- A New Hope. Instead of using wordcloud, I would like to use bar plot to analize the word frequency as they convey more clear and concise information.
 
 ```{r}
-frequentTerms(ep4$dialogue) %>%
+
+ frequentTerms(ep4$dialogue) %>%
   mutate(word = as.character(word)) %>%
   slice(1:15) %>%
   ggplot(aes(fct_reorder(word,freq), freq)) +
@@ -153,6 +155,7 @@ frequentTerms(ep4$dialogue) %>%
   coord_flip() +
   theme_gdocs() +
   labs(x="Word Frequency", y="Words",title="Star Wars Episode IV")
+
 
 ```
 
@@ -163,7 +166,7 @@ frequentBigrams(ep4$dialogue) %>%
   mutate(word = as.character(word)) %>%
   slice(1:15) %>%
   ggplot(aes(fct_reorder(word,freq), freq)) +
-  geom_col(fill = "burlywood", color = "black") +
+  geom_col(fill = "bisque4", color = "black") +
   geom_label(aes(label = freq)) +
   coord_flip() +
   theme_gdocs() +
@@ -227,7 +230,7 @@ frequentBigrams(ep5$dialogue) %>%
   mutate(word = as.character(word)) %>%
   slice(1:15) %>%
   ggplot(aes(fct_reorder(word,freq), freq)) +
-  geom_col(fill = "burlywood", color = "black") +
+  geom_col(fill = "bisque4", color = "black") +
   geom_label(aes(label = freq)) +
   coord_flip() +
   theme_gdocs() +
@@ -280,6 +283,20 @@ frequentTerms(ep6$dialogue) %>%
   slice(1:15) %>%
   ggplot(aes(fct_reorder(word,freq), freq)) +
   geom_col(fill = "burlywood", color = "black") +
+  geom_label(aes(label = freq)) +
+  coord_flip() +
+  theme_gdocs() +
+  labs(x="Word Frequency", y="Words",title="Star Wars Episode VI")
+
+```
+
+
+```{r}
+frequentBigrams(ep6$dialogue) %>%
+  mutate(word = as.character(word)) %>%
+  slice(1:15) %>%
+  ggplot(aes(fct_reorder(word,freq), freq)) +
+  geom_col(fill = "bisque4", color = "black") +
   geom_label(aes(label = freq)) +
   coord_flip() +
   theme_gdocs() +
@@ -348,6 +365,20 @@ frequentTerms(trilogy$dialogue) %>%
   coord_flip() +
   theme_gdocs() +
   labs(x="Word Frequency", y="Words",title="Star Wars Original Trilogy")
+```
+
+
+```{r}
+frequentBigrams(trilogy$dialogue) %>%
+  mutate(word = as.character(word)) %>%
+  slice(1:15) %>%
+  ggplot(aes(fct_reorder(word,freq), freq)) +
+  geom_col(fill = "bisque4", color = "black") +
+  geom_label(aes(label = freq)) +
+  coord_flip() +
+  theme_gdocs() +
+  labs(x="Word Frequency", y="Words",title="Star Wars Original Trilogy")
+
 ```
 
 # **Sentiment Analysis**
