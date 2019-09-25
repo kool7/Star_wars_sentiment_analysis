@@ -21,12 +21,14 @@ It is estimated that over 70% of potentially useable business information is uns
 #load packages
 library(tidyverse)
 library(tidytext)
-library(wordcloud2)
+library(wordcloud)
 library(tm)
-library(topicmodels)
 library(ggthemes)
 library(RWeka)
 library(gridExtra)
+library(reshape2)
+library(ggpubr)
+library(cowplot)
 
 #load datasets
 ep4 <- read.table("data/SW_EpisodeIV.txt")
@@ -101,12 +103,7 @@ frequentBigrams <- function(text){
 Now we will perform some exploratory data analysis and sentiment analysis on these datasets and then in the last we will combine these three datasets together to gain more meaningful insights from the data.
 
 ## Episode IV: A New Hope
-There are two variables -
 
-  * character - Number of character in episode IV.
-  
-  * dialogue - dialogue given by particular character.
-    
 Lets have a glimpse of our dataset. 
 
 ```{r}
@@ -114,18 +111,27 @@ Lets have a glimpse of our dataset.
 glimpse(ep4)
 ```
 
+There are two variables -
+
+  * character - Number of character in episode IV.
+  
+  * dialogue - dialogue given by particular character.
+    
+Let's get the total number of dialogue in Episode IV.
+
 ```{r}
 # Total number of dialogues.
 length(ep4$dialogue)
 ```
+
+There are 1010 dialogues in Episode IV. Now, We will get the total number of characters in Episode IV.
 
 ```{r}
 # Total number of characters.
 length(table(ep4$character))
 ```
 
-We can see there are total 60 character in Episode IV - A New Hope and total of 1010 dialogues.
-We will now construct a frequency plot for showing top 15 character in Episode IV: A New Hope. As we can see Luke is the top character in Episode IV.
+We can see there are total 60 character in Episode IV - A New Hope. We will now construct a frequency plot for showing top 15 character in Episode IV: A New Hope.
 
 ```{r}
 top_char_ep4 <- ep4 %>%
@@ -141,6 +147,8 @@ ggplot(top_char_ep4, aes(character, n)) +
   geom_label(label=top_char_ep4$n, size=3)
 
 ```
+
+As we can see Luke is the top character in Episode IV followed by Han at second place and Threepio at third place. Hmm, seems nice.
 
 Lets make a plot to see the most frequent terms in Episode IV- A New Hope. Instead of using wordcloud, I would like to use bar plot to analize the word frequency as they convey more clear and concise information.
 
@@ -170,20 +178,17 @@ frequentBigrams(ep4$dialogue) %>%
   geom_label(aes(label = freq)) +
   coord_flip() +
   theme_gdocs() +
-  labs(x="Word Frequency", y="Words",title="Star Wars Episode IV")
+  labs(x="Word Frequency", y="Bigrams",title="Star Wars Episode IV")
 ```
 
 ## Episode V-The Empire Strikes Back
 There are two variables -
 
-  * character - Number of character in episode IV.
+  * character - Number of character in Episode V.
   
   * dialogue - dialogue given by particular character.
 
-```{r}
-# getting glimpse of dataset
-glimpse(ep5)
-```
+We will see the total number of characters and dialogues in Episode V. Let's Go...   
 
 ```{r}
 # Total number of dialogue
@@ -195,7 +200,7 @@ length(ep5$dialogue)
 length(table(ep5$character))
 ```
 
-There are 49 character in Episode V and 839 dialogues.
+So there are 49 character in Episode V and 839 dialogues. Slightly less than Episode IV. We will repeat the same procedure with Episode V for generating the plot to check the top characters and frequent terms & Bigrams.
 
 ```{r}
 top_char_ep5 <- ep5 %>%
@@ -234,33 +239,32 @@ frequentBigrams(ep5$dialogue) %>%
   geom_label(aes(label = freq)) +
   coord_flip() +
   theme_gdocs() +
-  labs(x="Word Frequency", y="Words",title="Star Wars Episode V")
+  labs(x="Word Frequency", y="Bigrams",title="Star Wars Episode V")
 
 ```
 
 ## Episode VI-Return of the Jedi
 There are two variables -
 
-  * character - Number of character in episode IV.
+  * character - Number of character in episode VI.
   
   * dialogue - dialogue given by particular character.
   
-```{r}
-# Getting glimpse of dataset
-glimpse(ep6)
-```
+We will see the total number of characters and dialogues in Episode VI. Let's Go...   
 
 ```{r}
 # Total number of dialogues.
 length(ep6$dialogue)
 ```
 
+Hmm, dialogues are much less in Episode 6 as compared to Episode 4 & Episode 5.
+
 ```{r}
 # Total number of characters.
 length(table(ep6$character))
 ```
 
-There are 53 characters in Episode VI and total of 674 dialogue.
+Wow, there are 53 characters in Episode VI. We will repeat the same procedure with Episode VI for generating the plot to check the top characters and frequent terms & Bigrams.
 
 ```{r}
 top_char_ep6 <- ep6 %>%
@@ -300,27 +304,17 @@ frequentBigrams(ep6$dialogue) %>%
   geom_label(aes(label = freq)) +
   coord_flip() +
   theme_gdocs() +
-  labs(x="Word Frequency", y="Words",title="Star Wars Episode VI")
+  labs(x="Word Frequency", y="Bigrams",title="Star Wars Episode VI")
 
 ```
 
 ## Trilogy
 
-Now we will combine all the three datasets to perform some more analysis. There are two variables -
-
-  1.character - Number of character in episode IV.
-  2.dialogue - dialogue given by particular character.
+Now we will combine all the three datasets to perform some more analysis. We will repeat the same steps as above to get more meaningful insights of the joint datasets. This is going to vbe awesome. 
 
 ```{r}
 # The Original Trilogy 
 trilogy <- rbind(ep4, ep5, ep6)
-```
-
-Let's have a glimpse of our data.
-
-```{r}
-# Getting glimpse of dataset
-glimpse(trilogy)
 ```
 
 Now we are going to check the total number of dialogue and characters in combined dataset.
@@ -335,7 +329,7 @@ length(trilogy$dialogue)
 length(table(trilogy$character))
 ```
 
-We can see there are total 2,523 dialogue in Star Wars Trilogy and total 129 characters. We should now visualize the top character in whole trilogy.
+Interesting! there are in total 2,523 dialogue in Star Wars Trilogy and 129 characters. We should now visualize the top character in whole trilogy.
 
 ```{r}
 
@@ -353,7 +347,7 @@ ggplot(top_char_trilogy, aes(character, n)) +
 
 ```
 
-Hmm, it seems like Luke is at the top of mountain. :)
+Hmm, it seems like Luke is at the top of mountain. Hope to see something interesting in frequent term plot. :)
 
 ```{r}
 frequentTerms(trilogy$dialogue) %>%
@@ -367,6 +361,7 @@ frequentTerms(trilogy$dialogue) %>%
   labs(x="Word Frequency", y="Words",title="Star Wars Original Trilogy")
 ```
 
+Nice! Luke is the most frequent term in the trilogy. That's expected btw. :P
 
 ```{r}
 frequentBigrams(trilogy$dialogue) %>%
@@ -377,7 +372,7 @@ frequentBigrams(trilogy$dialogue) %>%
   geom_label(aes(label = freq)) +
   coord_flip() +
   theme_gdocs() +
-  labs(x="Word Frequency", y="Words",title="Star Wars Original Trilogy")
+  labs(x="Word Frequency", y="Bigrams",title="Star Wars Original Trilogy")
 
 ```
 
@@ -403,13 +398,22 @@ sentiment <- tokens %>%
   mutate(word = reorder(word, n)) 
 ```
 
-```{r}
+```{r message=FALSE}
 ggplot(sentiment, aes(word, n , fill = sentiment)) +
   geom_col(show.legend = FALSE) + 
   facet_wrap(~sentiment, scales = "free_y") +
   labs(y="Frequency", x="Terms") +
   coord_flip() +
   theme_gdocs()
+
+```
+
+```{r message=FALSE}
+tokens %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort=TRUE) %>%
+  acast(word ~ sentiment, value.var="n", fill=0) %>%
+  comparison.cloud(colors=c("#F8766D", "#00BFC4"), max.words=100)
 ```
 
 # **References**
