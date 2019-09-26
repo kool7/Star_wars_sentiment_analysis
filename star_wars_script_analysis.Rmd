@@ -11,6 +11,8 @@ output:
     code_folding: hide
 ---
 
+![](data/StarWars-Minimal-Wallpapers-6.png)
+
 # **Introduction**
 
 It is estimated that over 70% of potentially useable business information is unstructured, often in the form of text data. Text mining provides a collection of techniques that allow us to derive actionable insights from these data. In this kernel we are going to perform text mining to perform analysis on the Star Wars scripts from The Original Trilogy Episodes (IV, V and VI). We will use different types of visualization techniques. We are going to use tm and tidytext packages for text mining and analysis.we will use wordcloud and ggplot2 for visualization.
