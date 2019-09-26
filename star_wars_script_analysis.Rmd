@@ -387,20 +387,21 @@ tokens <- trilogy %>%
   mutate(dialogue = as.character(trilogy$dialogue)) %>%
   unnest_tokens(word, dialogue) 
 
-sentiment <- tokens %>%
+bing <- tokens %>%
   inner_join(get_sentiments("bing")) %>%
   count(sentiment, word) %>%
   filter(n >= 15) %>%
   mutate(n = ifelse(sentiment == "negative", -n, n)) %>%
   mutate(word = reorder(word,n)) 
 
-ggplot(sentiment, aes(word, n, fill = sentiment)) +
+ggplot(bing, aes(word, n, fill = sentiment)) +
   geom_bar(stat = "identity") +
   ylab("Contribution to sentiment") +
   coord_flip() +
   theme_gdocs()
 ```
 
+Let's also make a word cloud for Positive & Negative sentiments.
 
 ```{r message=FALSE}
 tokens %>%
@@ -426,6 +427,21 @@ ggplot(pos.neg, aes(reorder(sentiment, n, sum), n, fill = sentiment)) +
   
 ```
 
+We can use this lexicon to compute the most frequent words for each sentiment.
+
+```{r}
+pos.neg %>%
+  group_by(sentiment) %>%
+  arrange(desc(n)) %>%
+  slice(1:10) %>%
+  ggplot(aes(reorder(word,n), n)) +
+  geom_col(aes(fill=sentiment), show.legend=FALSE) +
+  facet_wrap(~sentiment, scales="free_y") +
+  labs(y="Frequency", x="Terms") +
+  coord_flip() +
+  theme_gdocs() 
+
+```
 
 # **References**
 *Courses*
