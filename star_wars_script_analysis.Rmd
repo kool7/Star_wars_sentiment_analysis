@@ -27,8 +27,6 @@ library(ggthemes)
 library(RWeka)
 library(gridExtra)
 library(reshape2)
-library(ggpubr)
-library(cowplot)
 
 #load datasets
 ep4 <- read.table("data/SW_EpisodeIV.txt")
@@ -391,22 +389,18 @@ tokens <- trilogy %>%
 
 sentiment <- tokens %>%
   inner_join(get_sentiments("bing")) %>%
-  count(word, sentiment, sort = TRUE) %>%
-  group_by(sentiment) %>%
-  top_n(10, n) %>%
-  ungroup() %>%
-  mutate(word = reorder(word, n)) 
-```
+  count(sentiment, word) %>%
+  filter(n >= 15) %>%
+  mutate(n = ifelse(sentiment == "negative", -n, n)) %>%
+  mutate(word = reorder(word,n)) 
 
-```{r message=FALSE}
-ggplot(sentiment, aes(word, n , fill = sentiment)) +
-  geom_col(show.legend = FALSE) + 
-  facet_wrap(~sentiment, scales = "free_y") +
-  labs(y="Frequency", x="Terms") +
+ggplot(sentiment, aes(word, n, fill = sentiment)) +
+  geom_bar(stat = "identity") +
+  ylab("Contribution to sentiment") +
   coord_flip() +
   theme_gdocs()
-
 ```
+
 
 ```{r message=FALSE}
 tokens %>%
@@ -414,7 +408,24 @@ tokens %>%
   count(word, sentiment, sort=TRUE) %>%
   acast(word ~ sentiment, value.var="n", fill=0) %>%
   comparison.cloud(colors=c("#F8766D", "#00BFC4"), max.words=100)
+
 ```
+
+The nrc lexicon (from Saif Mohammad and Peter Turney) categorizes words in a binary fashion into categories of positive, negative, anger, anticipation, disgust, fear, joy, sadness, surprise, and trust.
+
+```{r message=FALSE}
+pos.neg <- tokens %>%
+  inner_join(get_sentiments("nrc")) %>%
+  count(word, sentiment, sort = TRUE)
+
+ggplot(pos.neg, aes(reorder(sentiment, n, sum), n, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  labs(x="Sentiment", y="Frequency") +
+  coord_flip() +
+  theme_gdocs() 
+  
+```
+
 
 # **References**
 *Courses*
