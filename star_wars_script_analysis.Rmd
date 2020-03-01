@@ -1,5 +1,5 @@
 ---
-title: "Star Wars Script Analysis"
+title: "Beginner Text Mining & Sentiment Analysis"
 author: "Kuldeep Singh Chouhan"
 date: "10-01-2019"
 output: 
@@ -17,6 +17,16 @@ output:
 
 It is estimated that over 70% of potentially useable business information is unstructured, often in the form of text data. Text mining provides a collection of techniques that allow us to derive actionable insights from these data. In this kernel we are going to perform text mining to perform analysis on the Star Wars scripts from The Original Trilogy Episodes (IV, V and VI). We will use different types of visualization techniques. We are going to use tm and tidytext packages for text mining and analysis.we will use wordcloud and ggplot2 for visualization.
 
+So what exactly is **Text Mining**? 
+
+Well, **Text Mining** is the process of distilling actionable insights from text. **Text Mining** workflow involves following steps:
+  * Problem definition
+  * Identify text to be collected
+  * Text Organization
+  * Feature Extraction (word tokens or sentiments)
+  * Analysis
+  * Reach an insight
+  
 # **Loading Data & Packages**
 
 ```{r message=FALSE}
@@ -37,7 +47,7 @@ ep6 <- read.table("data/SW_EpisodeVI.txt")
 ```
 
 # **Preprocessing**
-(1) cleanCorpus() - The first function performs cleaning and preprocessing steps to a corpus.
+(1) cleanCorpus() - The first function performs cleaning and preprocessing steps to a corpus. A Corpus is a set of texts. We are using this function for preprocessing out texts.
 
 (2) frequentTerms() - The second function constructs the term-document matrix, that describes the frequency of terms that occur in a collection of documents. This matrix has terms in the first column and documents (sentences) across the top as individual column names.
 
@@ -121,7 +131,8 @@ Let's get the total number of dialogue in Episode IV.
 
 ```{r}
 # Total number of dialogues.
-length(ep4$dialogue)
+ep4 %>%
+  summarise(dialogue_number = n())
 ```
 
 There are 1010 dialogues in Episode IV. Now, We will get the total number of characters in Episode IV.
@@ -137,7 +148,7 @@ We can see there are total 60 character in Episode IV - A New Hope. We will now 
 
 top_char_ep4 <- ep4 %>%
   count(character) %>%
-  mutate(character = reorder(character,n)) %>%
+  mutate(character = fct_reorder(character,n)) %>%
   top_n(15,n)
 
 ggplot(top_char_ep4, aes(character, n)) +
@@ -402,6 +413,7 @@ ggplot(bing, aes(word, n, fill = sentiment)) +
   ylab("Contribution to sentiment") +
   coord_flip() +
   theme_gdocs()
+ 
 ```
 
 Let's also make a word cloud for Positive & Negative sentiments.
@@ -453,7 +465,8 @@ Datacamp. Text Mining: Bag of Words. URL: https://www.datacamp.com/courses/intro
 
 Datacamp. Sentiment Analysis in R: The Tidy Way. URL: https://www.datacamp.com/courses/sentiment-analysis-in-r-the-tidy-way
 
-Text Mining with R. URL: https://www.tidytextmining.com/sentiment.html#wordclouds
+Text Mining with R. 
+URL:https://www.tidytextmining.com/
 
 *Packages*
 
