@@ -1,5 +1,5 @@
 ---
-title: "Beginner Text Mining & Sentiment Analysis"
+title: "Beginner's Guide to Text Mining & Sentiment Analysis"
 author: "Kuldeep Singh Chouhan"
 date: "10-01-2019"
 output: 
@@ -20,6 +20,7 @@ It is estimated that over 70% of potentially useable business information is uns
 So what exactly is **Text Mining**? 
 
 Well, **Text Mining** is the process of distilling actionable insights from text. **Text Mining** workflow involves following steps:
+
   * Problem definition
   * Identify text to be collected
   * Text Organization
@@ -27,6 +28,8 @@ Well, **Text Mining** is the process of distilling actionable insights from text
   * Analysis
   * Reach an insight
   
+It is time to load our data. We will use read_table() to load our text data.
+
 # **Loading Data & Packages**
 
 ```{r message=FALSE}
@@ -44,14 +47,38 @@ library(reshape2)
 ep4 <- read.table("data/SW_EpisodeIV.txt")
 ep5 <- read.table("data/SW_EpisodeV.txt")
 ep6 <- read.table("data/SW_EpisodeVI.txt")
+
 ```
 
-# **Preprocessing**
-(1) cleanCorpus() - The first function performs cleaning and preprocessing steps to a corpus. A Corpus is a set of texts. We are using this function for preprocessing out texts.
+# **Preprocessing** {.tabset .tabset-fade .tabset-pills}
 
-(2) frequentTerms() - The second function constructs the term-document matrix, that describes the frequency of terms that occur in a collection of documents. This matrix has terms in the first column and documents (sentences) across the top as individual column names.
+After loading our data the next step is to get it's glimpse and to perform some preprocessing steps in order to use it for further analysis.
 
-(3) frequentBigrams() - It extracts token containing two words. we will use this function two make plots for bigrams.
+First we need to create a new object that only consists of text column from our dataframe. Next step is to convert this vector containing the text data into a corpus. A **Corpus** is a collection of documents. We will use **VectorSource()** to interpret each element in our vector of text as a document. The output of this function is going to be *Source Object*. Now that we've converted our vector to a *Source object*, we pass it to another tm function **VCorpus()** to create our volatile corpus. The VCorpus object is a nested list, or list of lists. At each index of the *VCorpus object*, there is a PlainTextDocument object, which is a list containing actual text data, and some corresponding metadata. Also, we can create *Source Object* from dataframes as well with the help of **DataframeSource()**.
+
+We will use common preprocessing functions in order to clean our corpus. The **tm** and **qdap** packages have some common preprocessing functions to clean our corpus according to our requirements. Let's see some common functions from **tm** package:
+
+* tolower() - make all text lowercase.
+* removePunctuation() - removes punctuations like periods and exclamation points.
+* removeNumbers() - removes numbers.
+* removeWords() - remove specific words like ("the", "of", "is", etc.)
+* stripWhiteSpace() - removes tabs and extra spaces.
+
+Some cleaning functions from **qdap** package:
+
+* bracketX(): Remove all text within brackets (e.g. "It's (so) cool" becomes "It's cool")
+* replace_number(): Replace numbers with their word equivalents (e.g. "2" becomes "two")
+* replace_abbreviation(): Replace abbreviations with their full text equivalents (e.g. "Sr" becomes "Senior")
+* replace_contraction(): Convert contractions back to their base words (e.g. "shouldn't" becomes "should not")
+* replace_symbol() Replace common symbols with their word equivalents (e.g. "$" becomes "dollar")
+
+**NOTE:** Specific preprocessing steps will vary based on the project. 
+
+## cleanCorpus
+
+We will create some useful functions which will perform preprocessing on our vector corpus. The tm package provides a function tm_map() to apply cleaning functions to an entire corpus, making the cleaning steps easier. tm_map() takes two arguments, a corpus and a cleaning function. For compatibility, base R and qdap functions need to be wrapped in content_transformer().
+
+* cleanCorpus() - The first function performs cleaning and preprocessing steps to a corpus. A Corpus is a set of texts. We are using this function for preprocessing out texts.
 
 ```{r message=FALSE, warning=FALSE}
 # Text transformations
@@ -69,6 +96,16 @@ cleanCorpus <- function(corpus){
 
 }
 
+```
+
+## frequentTerms
+
+After getting the cleaned corpus we need to change the structure for further analysis.The foundation of the **Text Mining** is the Term Document Matrix or The Document Term Matrix. The TDM has each corpus word represented as row and document as column. Both the matrices conatin the word frequencies. We will create Term Document Matrix using the function **TermDocumentMatrix()**.
+
+* frequentTerms() - This function constructs the term-document matrix from clean corpus, it describes the frequency of terms that occur in a collection of documents. This matrix has terms in the first column and documents (sentences) across the top as individual column names.
+
+```{r message=FALSE, warning=FALSE}
+
 # Most frequent terms 
 frequentTerms <- function(text){
 
@@ -83,6 +120,13 @@ frequentTerms <- function(text){
 
 }
 
+```
+
+## frequentBigrams
+
+(3) frequentBigrams() - It extracts token containing two words (bigrams). we will use this function two make plots for bigrams.
+
+```{r message=FALSE, warning=FALSE}
 
 # Tokenizer for defining bigrams
 tokenizer  <- function(x){
