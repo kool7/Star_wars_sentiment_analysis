@@ -36,12 +36,14 @@ It is time to load our data. We will use read_table() to load our text data.
 #load packages
 library(tidyverse)
 library(tidytext)
-library(wordcloud)
 library(tm)
+library(wordcloud)
+library(plotrix)
 library(ggthemes)
 library(RWeka)
 library(gridExtra)
 library(reshape2)
+library(viridisLite)
 
 #load datasets
 ep4 <- read.table("data/SW_EpisodeIV.txt")
@@ -81,18 +83,20 @@ We will create some useful functions which will perform preprocessing on our vec
 * cleanCorpus() - The first function performs cleaning and preprocessing steps to a corpus. A Corpus is a set of texts. We are using this function for preprocessing out texts.
 
 ```{r message=FALSE, warning=FALSE}
+
 # Text transformations
+
 cleanCorpus <- function(corpus){
 
-  corpus.tmp <- tm_map(corpus, removePunctuation)
-  corpus.tmp <- tm_map(corpus.tmp, removeNumbers)
-  corpus.tmp <- tm_map(corpus.tmp, stripWhitespace)
-  corpus.tmp <- tm_map(corpus.tmp, content_transformer(tolower))
+  corpus <- tm_map(corpus, removePunctuation)
+  corpus <- tm_map(corpus, removeNumbers)
+  corpus <- tm_map(corpus, stripWhitespace)
+  corpus <- tm_map(corpus, content_transformer(tolower))
   v_stopwords <- c(stopwords("english"), c("thats","weve","hes","theres","ive","im",
                                            "will","can","cant","dont","youve","us",
                                            "youre","youll","theyre","whats","didnt"))
-  corpus.tmp <- tm_map(corpus.tmp, removeWords, v_stopwords)
-  return(corpus.tmp)
+  corpus <- tm_map(corpus, removeWords, v_stopwords)
+  return(corpus)
 
 }
 
@@ -102,13 +106,22 @@ cleanCorpus <- function(corpus){
 
 After getting the cleaned corpus we need to change the structure for further analysis.The foundation of the **Text Mining** is the Term Document Matrix or The Document Term Matrix. The TDM has each corpus word represented as row and document as column. Both the matrices conatin the word frequencies. We will create Term Document Matrix using the function **TermDocumentMatrix()**.
 
-* frequentTerms() - This function constructs the term-document matrix from clean corpus, it describes the frequency of terms that occur in a collection of documents. This matrix has terms in the first column and documents (sentences) across the top as individual column names.
+* frequentTerms() - This function take text vector as input and return a dataframe with word and freq columns. This function constructs the term-document matrix from clean corpus, it describes the frequency of terms that occur in a collection of documents. This matrix has terms in the first column and documents (sentences) across the top as individual column names. 
 
 ```{r message=FALSE, warning=FALSE}
 
 # Most frequent terms 
+
 frequentTerms <- function(text){
 
+  # VectorSource - Converting text vector into Source Object.
+  # VCorpus - Converting source object into Volatile Corpus.
+  # cleanCorpus - For cleaning our corpus.
+  # TermDocumentMatrix - Turning Corpus into Term(row) Document(column) Matrix.
+  # as.matrix - To analyze TDM we need to change it to a simple matrix.
+  # rowSums - Calling rowSums() on your newly made matrix aggregates all the terms used in a passage.
+  # sort - sorting in decreasing order column wise.
+  
   s.cor <- VCorpus(VectorSource(text))
   s.cor.cl <- cleanCorpus(s.cor)
   s.tdm <- TermDocumentMatrix(s.cor.cl)
@@ -121,6 +134,59 @@ frequentTerms <- function(text){
 }
 
 ```
+
+## commonalityCloud
+
+* commonalityCloud() - This function will take two different text vectors as arguments and it will make commonality cloud. The commonality cloud is a visualization which tells about the common words in two documents.
+
+```{r}
+
+commonalityCloud <- function(vec1, vec2){
+  
+  vec1 <- paste(vec1, collapse = "")
+  vec2 <- paste(vec2, collapse = "")
+  all_vec <- c(vec1, vec2)
+  all_vec <- VCorpus(VectorSource(all_vec))
+  all_clean <- cleanCorpus(all_vec)
+  all_tdm <- TermDocumentMatrix(all_clean)
+  all_m <- as.matrix(all_tdm)
+  commonality.cloud(all_m, colors = "steelblue1", max.words = 35)
+}
+
+```
+
+
+## pyramidPlot
+
+```{r message=FALSE, warning=FALSE}
+
+pyramidPlot <- function(vec1, vec2, lab1, lab2){
+  
+  vec1 <- paste(vec1, collapse = "")
+  vec2 <- paste(vec2, collapse = "")
+  all_vec <- c(vec1, vec2)
+  all_vec <- VCorpus(VectorSource(all_vec))
+  all_clean <- cleanCorpus(all_vec)
+  all_tdm <- TermDocumentMatrix(all_clean)
+  all_m <- as.matrix(all_tdm)
+  common <- subset(all_m, all_m[, 1] > 0 & all_m[, 2] > 0)
+  difference <- abs(common[, 1] - common[, 2])
+  common <- cbind(common, difference)
+  common <- common[order(common[, 3], decreasing = TRUE), ]
+  top20_df <- data.frame(x = common[1:20, 1],
+                         y = common[1:20, 2],
+                         labels = rownames(common[1:20, ]))
+  pyramid.plot(top20_df$x, top20_df$y,
+               labels = top20_df$labels,
+               main = "Words in Common",
+               gap = 8, raxlab = NULL,
+               unit = NULL, 
+               top.labels = c(lab1, "Words", lab2))
+  
+}
+
+```
+
 
 ## frequentBigrams
 
@@ -154,11 +220,11 @@ frequentBigrams <- function(text){
 
 # **EDA**
 
-Now we will perform some exploratory data analysis and sentiment analysis on these datasets and then in the last we will combine these three datasets together to gain more meaningful insights from the data.
+Now we will perform some exploratory data analysis on these datasets and then in the last we will combine these three datasets together to gain more meaningful insights. We will then perform some sentiment analysis. So let's dive in...
 
 ## Episode IV: A New Hope
 
-Lets have a glimpse of our dataset. 
+We will have a glimpse of our dataset. 
 
 ```{r}
 # getting glimpse of dataset.
@@ -167,7 +233,7 @@ glimpse(ep4)
 
 There are two variables -
 
-  * character - Number of character in episode IV.
+  * character - Number of character in Episode IV.
   
   * dialogue - dialogue given by particular character.
     
@@ -177,6 +243,7 @@ Let's get the total number of dialogue in Episode IV.
 # Total number of dialogues.
 ep4 %>%
   summarise(dialogue_number = n())
+
 ```
 
 There are 1010 dialogues in Episode IV. Now, We will get the total number of characters in Episode IV.
@@ -184,9 +251,10 @@ There are 1010 dialogues in Episode IV. Now, We will get the total number of cha
 ```{r}
 # Total number of characters.
 length(table(ep4$character))
+
 ```
 
-We can see there are total 60 character in Episode IV - A New Hope. We will now construct a frequency plot for showing top 15 character in Episode IV: A New Hope.
+We can see there are total 60 character in Episode IV - A New Hope. We will now construct a frequency plot for showing top 15 characters.
 
 ```{r}
 
@@ -208,6 +276,25 @@ As we can see Luke is the top character in Episode IV followed by Han at second 
 
 Lets make a plot to see the most frequent terms in Episode IV- A New Hope. Instead of using wordcloud, I would like to use bar plot to analize the word frequency as they convey more clear and concise information.
 
+A word cloud is a visualization of terms. In a word cloud, size is often scaled to frequency and in some cases the colors may indicate another measurement.
+
+```{r}
+
+cloud <- frequentTerms(ep4$dialogue)
+wordcloud(cloud$word, cloud$freq, max.words = 30, colors = cividis(5))
+
+```
+
+Commonality clouds - 
+
+```{r}
+
+commonalityCloud(ep4$dialogue, ep5$dialogue)
+
+```
+
+
+
 ```{r}
 
  frequentTerms(ep4$dialogue) %>%
@@ -219,7 +306,6 @@ Lets make a plot to see the most frequent terms in Episode IV- A New Hope. Inste
   coord_flip() +
   theme_gdocs() +
   labs(x="Word Frequency", y="Words",title="Star Wars Episode IV")
-
 
 ```
 
@@ -234,7 +320,7 @@ frequentBigrams(ep4$dialogue) %>%
   geom_label(aes(label = freq)) +
   coord_flip() +
   theme_gdocs() +
-  labs(x="Word Frequency", y="Bigrams",title="Star Wars Episode IV")
+  labs(x="Bigram Frequency", y="Bigrams",title="Star Wars Episode IV")
 ```
 
 ## Episode V-The Empire Strikes Back
