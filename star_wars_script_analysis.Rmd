@@ -1,5 +1,5 @@
 ---
-title: "Beginner's Guide to Text Mining & Sentiment Analysis"
+title: "Beginner's Guide to Text Mining & Sentiment Analysis using R"
 author: "Kuldeep Singh Chouhan"
 date: "10-01-2019"
 output: 
@@ -28,11 +28,12 @@ Well, **Text Mining** is the process of distilling actionable insights from text
   * Analysis
   * Reach an insight
   
-It is time to load our data. We will use read_table() to load our text data.
+It is time to load our data. We will use **read_table()** to load our text data.
 
 # **Loading Data & Packages**
 
 ```{r message=FALSE}
+
 #load packages
 library(tidyverse)
 library(tidytext)
@@ -74,13 +75,13 @@ Some cleaning functions from **qdap** package:
 * replace_contraction(): Convert contractions back to their base words (e.g. "shouldn't" becomes "should not")
 * replace_symbol() Replace common symbols with their word equivalents (e.g. "$" becomes "dollar")
 
-**NOTE:** Specific preprocessing steps will vary based on the project. 
-
-## cleanCorpus
+**NOTE: Specific preprocessing steps will vary based on the project.**
 
 We will create some useful functions which will perform preprocessing on our vector corpus. The tm package provides a function tm_map() to apply cleaning functions to an entire corpus, making the cleaning steps easier. tm_map() takes two arguments, a corpus and a cleaning function. For compatibility, base R and qdap functions need to be wrapped in content_transformer().
 
-* cleanCorpus() - The first function performs cleaning and preprocessing steps to a corpus. A Corpus is a set of texts. We are using this function for preprocessing out texts.
+## cleanCorpus
+
+* cleanCorpus() - The first function performs cleaning and preprocessing steps to a corpus. A Corpus is a set of texts. It takes text vector as input and returns a cleaned corpus. 
 
 ```{r message=FALSE, warning=FALSE}
 
@@ -137,14 +138,14 @@ frequentTerms <- function(text){
 
 ## commonalityCloud
 
-* commonalityCloud() - This function will take two different text vectors as arguments and it will make commonality cloud. The commonality cloud is a visualization which tells about the common words in two documents.
+* commonalityCloud() - This function will take two different text vectors as arguments and it will make commonality cloud. The commonality cloud is a visualization which tells about the common words in two documents. 
 
 ```{r}
 
 commonalityCloud <- function(vec1, vec2){
   
-  vec1 <- paste(vec1, collapse = "")
-  vec2 <- paste(vec2, collapse = "")
+  vec1 <- paste(vec1, collapse = " ")
+  vec2 <- paste(vec2, collapse = " ")
   all_vec <- c(vec1, vec2)
   all_vec <- VCorpus(VectorSource(all_vec))
   all_clean <- cleanCorpus(all_vec)
@@ -155,15 +156,38 @@ commonalityCloud <- function(vec1, vec2){
 
 ```
 
+## comparisonCloud
+
+* comparisonCloud() - Takes four arguments two different text vectors and the names of columns to be specified. A comparison cloud will tell us about the distinct words in two documents.
+
+```{r}
+
+comparisonCloud <- function(vec1, vec2, col1, col2){
+  
+  vec1 <- paste(vec1, collapse = " ")
+  vec2 <- paste(vec2, collapse = " ")
+  all_vec <- c(vec1, vec2)
+  all_vec <- VCorpus(VectorSource(all_vec))
+  all_clean <- cleanCorpus(all_vec)
+  all_tdm <- TermDocumentMatrix(all_clean)
+  colnames(all_tdm) <- c(col1, col2)
+  all_m <- as.matrix(all_tdm)
+  comparison.cloud(all_m, colors = c("red", "blue"), max.words = 30)
+}
+
+```
+
 
 ## pyramidPlot
+
+* pyramidPlot - Commonality clouds show words that are shared across documents. One interesting thing that they can't show you is which of those words appear more commonly in one document compared to another. For this, we will use a **pyramid plot**, these can be generated using **pyramid.plot()** from the **plotrix** package.
 
 ```{r message=FALSE, warning=FALSE}
 
 pyramidPlot <- function(vec1, vec2, lab1, lab2){
   
-  vec1 <- paste(vec1, collapse = "")
-  vec2 <- paste(vec2, collapse = "")
+  vec1 <- paste(vec1, collapse = " ")
+  vec2 <- paste(vec2, collapse = " ")
   all_vec <- c(vec1, vec2)
   all_vec <- VCorpus(VectorSource(all_vec))
   all_clean <- cleanCorpus(all_vec)
