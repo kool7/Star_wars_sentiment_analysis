@@ -122,11 +122,11 @@ frequentTerms <- function(text){
   # rowSums - Calling rowSums() on your newly made matrix aggregates all the terms used in a passage.
   # sort - sorting in decreasing order column wise.
   
-  s.cor <- VCorpus(VectorSource(text))
-  s.cor.cl <- cleanCorpus(s.cor)
-  s.tdm <- TermDocumentMatrix(s.cor.cl)
-  s.tdm <- removeSparseTerms(s.tdm, 0.999)
-  m <- as.matrix(s.tdm)
+  corpus <- VCorpus(VectorSource(text))
+  corpus_clean <- cleanCorpus(corpus)
+  tdm <- TermDocumentMatrix(corpus_clean)
+  tdm <- removeSparseTerms(tdm, 0.999)
+  m <- as.matrix(tdm)
   word_freqs <- sort(rowSums(m), decreasing=TRUE)
   dm <- data.frame(word=names(word_freqs), freq=word_freqs)
   return(dm)
@@ -232,11 +232,11 @@ tokenizer  <- function(x){
 # Most frequent bigrams 
 frequentBigrams <- function(text){
 
-  s.cor <- VCorpus(VectorSource(text))
-  s.cor.cl <- cleanCorpus(s.cor)
-  s.tdm <- TermDocumentMatrix(s.cor.cl, control=list(tokenize=tokenizer))
-  s.tdm <- removeSparseTerms(s.tdm, 0.999)
-  m <- as.matrix(s.tdm)
+  corpus <- VCorpus(VectorSource(text))
+  corpus_clean <- cleanCorpus(corpus)
+  tdm <- TermDocumentMatrix(corpus_clean, control=list(tokenize=tokenizer))
+  tdm <- removeSparseTerms(tdm, 0.999)
+  m <- as.matrix(tdm)
   word_freqs <- sort(rowSums(m), decreasing=TRUE)
   dm <- data.frame(word=names(word_freqs), freq=word_freqs)
   return(dm)
@@ -506,7 +506,8 @@ length(table(trilogy$character))
 
 ```{r}
 # Total number of dialogues.
-length(trilogy$dialogue)
+trilogy %>%
+  summarise(Total_Dialogue = n())
 ```
 
 Interesting! there are in total 2,523 dialogue in Star Wars Trilogy and 129 characters. We should now visualize the top character in whole trilogy.
@@ -627,6 +628,20 @@ pos.neg %>%
   theme_gdocs() 
 
 ```
+
+# **Summary**
+
+* **Text Mining** is the process of distilling actionable insights from text. 
+
+* A common task in text mining is to look at **word frequencies**.
+
+* A **Corpus** is a collection of documents. These types of objects typically contain raw strings annotated with additional metadata and details.
+
+* **term-document matrix** is a sparse matrix describing a collection (i.e., a corpus) of documents with one row for each term and one column for each document. The value in the matrix is typically word count.
+
+* A **token** is a meaningful unit of text, most often a word, that we are interested in using for further analysis, and **tokenization** is the process of splitting text into tokens.
+
+* A **word cloud** is a visualization of terms. In a word cloud, size is often scaled to frequency and in some cases the colors may indicate another measurement.
 
 # **References**
 *Courses*
